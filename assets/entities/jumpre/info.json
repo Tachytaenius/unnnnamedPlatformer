@@ -1,0 +1,17 @@
+{
+	"walking": {
+		"yOffset": -1
+	},
+	"standing": {
+		"yOffset": -1
+	},
+	"skidding": {
+		"yOffset": -1
+	},
+	"jumping": {
+		"yOffset": -1
+	},
+	"falling": {
+		"yOffset": -1
+	}
+}

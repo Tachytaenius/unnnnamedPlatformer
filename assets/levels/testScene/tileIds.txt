@@ -1,0 +1,10 @@
+air
+invisibleDeathBarrier
+invisibleWall
+stone
+dirt
+grass
+stoneBricks
+waterSurface
+water
+log
