@@ -3,6 +3,8 @@ local vec2 = require("lib.mathsies").vec2
 local consts = {}
 
 consts.identity = "platformer"
+consts.tickLength = 1/24
+consts.maxTicksPerFrame = 3
 consts.contentWidth = 384
 consts.contentHeight = 256
 consts.contentScale = 3

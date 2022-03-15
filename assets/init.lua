@@ -55,6 +55,10 @@ end
 
 function assets.load()
 	assets.sky = love.graphics.newImage("assets/sky.png")
+	assets.font = {}
+	assets.font.imageData = love.image.newImageData("assets/font/image.png")
+	assets.font.info = json.decode(love.filesystem.read("assets/font/info.json"))
+	assets.font.font = love.graphics.newImageFont(assets.font.imageData, assets.font.info.glyphs)
 	
 	for entityTypeName, entityType in pairs(registry.entityTypes) do
 		local entityAsset = {}

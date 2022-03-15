@@ -46,27 +46,28 @@ local function loadMap(path)
 	end
 	
 	-- background/main/foregroundTileData.bin (or csv)
-	local function loadTileData(name, layerTable, colliders)
-		world[layerTable] = {}
+	local function loadTileData(name, colliders)
+		local layerTableName = name .. "Tiles"
+		world[layerTableName] = {}
 		local tileDataString = love.filesystem.read(path .. name .. "TileData.bin")
 		if not tileDataString then
 			tileDataString = csvToBin(love.filesystem.read(path .. name .. "TileData.csv"))
 		end
 		for x = 0, world.tileMapWidth - 1 do
-			world[layerTable][x] = {}
+			world[layerTableName][x] = {}
 			for y = 0, world.tileMapHeight - 1 do
 				local i = x + world.tileMapWidth * y
 				local tile = tileNamesById[tileDataString:sub(i+1, i+1):byte()]
-				world[layerTable][x][y] = tile
+				world[layerTableName][x][y] = tile
 				if colliders then
 					world.bumpWorld:add(i, x * consts.tileSize, y * consts.tileSize, consts.tileSize, consts.tileSize)
 				end
 			end
 		end
 	end
-	loadTileData("background", "backgroundTiles", false)
-	loadTileData("main", "mainTiles", true)
-	-- loadTileData("background", "foregroundTiles", false)
+	loadTileData("background", false)
+	loadTileData("main", true)
+	loadTileData("foreground", false)
 	
 	-- Add borders
 	local w, h = world.tileMapWidth * consts.tileSize, world.tileMapHeight * consts.tileSize

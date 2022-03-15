@@ -1,0 +1,11 @@
+{
+	"glyphs": " ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.!?$,#@~:;-{}&()<>'%/*0123456789",
+	"specials": [
+		{"pattern": "%?!", "replace": "$"},
+		{"pattern": "%$,", "replace": "~"},
+		{"pattern": "!,", "replace": "#"},
+		{"pattern": "%?,", "replace": "@"},
+		{"pattern": "%-%-%-", "replace": "{"},
+		{"pattern": "%-%-", "replace": "}"}
+	]
+}
