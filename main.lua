@@ -3,6 +3,7 @@ require("monkeypatch")
 local list = require("lib.list")
 local vec2 = require("lib.mathsies").vec2
 local bump = require("lib.bump")
+local json = require("lib.json")
 local quadreasonable = require("lib.quadreasonable")
 
 local consts = require("consts")
@@ -17,6 +18,8 @@ local getXYWH = require("util.getXYWH")
 local bumpFilter = require("util.bumpFilter")
 local getTileTypeFromIndex = require("util.getTileTypeFromIndex")
 local parseFontSpecials = require("util.parseFontSpecials")
+local addToInventory = require("util.addToInventory")
+local getInventoryAmount = require("util.getInventoryAmount")
 
 local world, player, camera, paused
 local contentCanvas
@@ -34,6 +37,64 @@ function love.load(arg)
 		local csv = love.filesystem.read(arg[2])
 		love.filesystem.write(arg[2]:sub(1, -5)..".bin", csvToBin(csv))
 		saveDirectory:disable()
+		print("done")
+		love.event.quit()
+		return
+	elseif arg[1] == "tiledExportToLevel" then
+		saveDirectory:enable()
+		local folderPath = "tiled/" .. arg[2] .. "/"
+		local import
+		for _, itemName in ipairs(love.filesystem.getDirectoryItems(folderPath)) do
+			local wholePath = folderPath .. itemName
+			if love.filesystem.getInfo(wholePath, "file") then
+				if itemName:match("%.tmj$") then
+					import = json.decode(love.filesystem.read(wholePath))
+					break
+				end
+			end
+		end
+		-- info and tileIds.txt assumed to already be present
+		local btd -- backgroundTileData.bin
+		local mtd -- mainTileData.bin
+		local ftd -- foregroundTileData.bin
+		local ent -- entities.json
+		for _, layer in ipairs(import.layers) do
+			if layer.name == "entities" then
+				ent = "[\n"
+				local noEntities = true
+				for _, object in ipairs(layer.objects) do
+					noEntities = false
+					ent = ent .. "\t{\"position\": [" .. math.floor(object.x) .. ", " .. math.floor(object.y) .. "], "
+					for _, v in ipairs(object.properties) do
+						local valueString = v.type == "string" and "\"" .. v.value .. "\"" or tostring(v.value)
+						ent = ent .. "\"" .. v.name .. "\": " .. valueString .. ", "
+					end
+					ent = ent:sub(1, -3) .. "},\n"
+				end
+				ent = noEntities and "[]" or ent:sub(1, -3) .. "\n]\n"
+			else
+				local data = layer.data
+				for i, v in ipairs(data) do
+					-- -1 because Tiled is exporting with tile ids +1 for some reason
+					data[i] = string.char(v - 1)
+					-- data[i] = (v - 1) .. "," -- csv
+				end
+				local bin = table.concat(data)
+				if layer.name == "background" then
+					btd = bin
+				elseif layer.name == "main" then
+					mtd = bin
+				elseif layer.name == "foreground" then
+					ftd = bin
+				end
+			end
+		end
+		love.filesystem.write(folderPath .. "backgroundTileData.bin", btd)
+		love.filesystem.write(folderPath .. "mainTileData.bin", mtd)
+		love.filesystem.write(folderPath .. "foregroundTileData.bin", ftd)
+		love.filesystem.write(folderPath .. "entities.json", ent)
+		saveDirectory:disable()
+		print("done")
 		love.event.quit()
 		return
 	end
@@ -41,7 +102,7 @@ function love.load(arg)
 	love.graphics.setLineStyle("rough")
 	assets.load()
 	animatedTiles:reset()
-	world, player, camera = loadMap("level1")
+	world, player, camera = loadMap(arg[1])
 	paused = false
 	contentCanvas = love.graphics.newCanvas(consts.contentWidth, consts.contentHeight)
 	keyPressed, keyReleased = {}, {}
@@ -56,6 +117,7 @@ end
 function love.keypressed(key) keyPressed[key] = true end
 function love.keyreleased(key) keyReleased[key] = true end
 function love.update(dt)
+	local entitiesToRemove, entitiesToAdd = {}, {}
 	if player and player.dead then
 		if keyPressed.space then
 			love.load({})
@@ -75,7 +137,10 @@ function love.update(dt)
 				if love.keyboard.isDown("d") then
 					move = move + 1
 				end
-				if not (not entity.onGround and entityType.dontChangeDirectionInAir) then
+				if
+					-- not (entity.skidding and entityType.dontChangeDirectionWhileSkidding) and -- Doesn't seem to work. Trying to replicate super mario bros. jumping behaviour where if you jump while braking you'll be facing the direction of motion...
+					not (not entity.onGround and entityType.dontChangeDirectionInAir)
+				then
 					if math.sign(move) == -1 then
 						entity.direction = -1
 					elseif math.sign(move) == 1 then
@@ -112,20 +177,34 @@ function love.update(dt)
 			entity.position.x, entity.position.y, cols, len = world.bumpWorld:move(entity, newPosition.x, newPosition.y, bumpFilter)
 			local friction = 0
 			for _, col in ipairs(cols) do
-				if type(col.other) == "number" then
+				if type(col.other) == "number" then -- tile
 					local tileType = getTileTypeFromIndex(col.other, "mainTiles", world)
 					friction = math.max(friction, tileType.friction or consts.defaultFriction)
 					if tileType.kills and entity.health then
 						entity.health = 0
 					end
+				elseif col.other.border then -- border
+					
+				else -- entity
+					local otherEntity = col.other
+					local otherEntityType = registry.entityTypes[otherEntity.type]
+					if entityType.picksUp and otherEntityType.pickUp and not otherEntity.pickedUp then
+						for _, v in ipairs(otherEntityType.pickUp) do
+							addToInventory(entity, v.type, v.count)
+						end
+						otherEntity.pickedUp = true
+						entitiesToRemove[#entitiesToRemove+1] = otherEntity
+					end
 				end
-				if col.normal.x ~= 0 then
-					entity.velocity.x = 0
-					collidedX = true
-				elseif col.normal.y ~= 0 then
-					entity.velocity.y = 0
-					if col.normal.y == -1 then
-						entity.onGround = true
+				if col.type ~= "cross" then
+					if col.normal.x ~= 0 then
+						entity.velocity.x = 0
+						collidedX = true
+					elseif col.normal.y ~= 0 then
+						entity.velocity.y = 0
+						if col.normal.y == -1 then
+							entity.onGround = true
+						end
 					end
 				end
 			end
@@ -134,9 +213,9 @@ function love.update(dt)
 			else
 				entity.jumpTimeLeft = 0
 			end
-			local gravityMultiplier = 1
+			local gravityMultiplier = entityType.noGravity and 0 or 1
 			if not entity.onGround and entity.jumpTimeLeft > 0 and not (entity.velocity.y > 0) then
-				gravityMultiplier = entityType.jumpGravityMultiplier
+				gravityMultiplier = gravityMultiplier * entityType.jumpGravityMultiplier
 			end
 			entity.velocity = entity.velocity + world.gravity * dt * gravityMultiplier
 			local sxs = math.sign(entity.velocity.x)
@@ -149,8 +228,12 @@ function love.update(dt)
 			-- 	entity.velocity = vec2.normalise(entity.velocity) * speed
 			-- end
 			-- Jumping feels odd when limiting speed is done properly
-			entity.velocity.x = limitMagnitude(entity.velocity.x, entityType.maxWalkSpeed)
-			entity.velocity.y = math.min(entity.velocity.y, entityType.maxFallSpeed)
+			if entityType.maxWalkSpeed then
+				entity.velocity.x = limitMagnitude(entity.velocity.x, entityType.maxWalkSpeed)
+			end
+			if entityType.maxFallSpeed then
+				entity.velocity.y = math.min(entity.velocity.y, entityType.maxFallSpeed)
+			end
 			local changeInPositionXThisFrame = entity.position.x - prevPosX
 			if entity.walkCycleTimer then
 				if entity.velocity.x == 0 and not dontResetWalkTimer then
@@ -167,6 +250,14 @@ function love.update(dt)
 				entity.dead = true
 			end
 		end
+	end
+	for _, entity in ipairs(entitiesToRemove) do
+		world.entities:remove(entity)
+		world.bumpWorld:remove(entity)
+	end
+	for _, entity in ipairs(entitiesToAdd) do
+		world.entities:add(entity)
+		world.bumpWorld:add(entity, getXYWH(entity))
 	end
 	keyPressed, keyReleased = {}, {}
 end
@@ -231,7 +322,7 @@ function love.draw(lerpI)
 				love.graphics.draw(entityAsset.walking, quadreasonable.getQuad(math.floor(entity.walkCycleTimer * entityAsset.walkCycleFrames), 0, entityAsset.walkCycleFrames, 1, spriteWidth, spriteHeight, 0), x, y, r, sx, sy, ox, oy)
 			end
 		else
-			love.graphics.draw(assets.entities[entityType], x, y, r, sx, sy, ox, oy)
+			love.graphics.draw(assets.entities[entity.type], x, y, r, sx, sy, ox, oy)
 			-- love.graphics.rectangle("line", getXYWH(entity))
 		end
 	end
@@ -252,7 +343,7 @@ function love.draw(lerpI)
 		local w2 = assets.font.font:getWidth(continueText)
 		love.graphics.print(continueText, contentCanvas:getWidth()/2-w2/2, contentCanvas:getHeight()/2)
 	end
-	
+	-- love.graphics.draw()
 	love.graphics.reset()
 	love.graphics.draw(contentCanvas, 0, 0, 0, consts.contentScale)
 end

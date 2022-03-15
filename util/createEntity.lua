@@ -18,8 +18,11 @@ local function createEntity(world, descriptor)
 	if entityType.hasWalkCycle then
 		newEntity.walkCycleTimer = 0
 	end
-	world.bumpWorld:add(newEntity, getXYWH(newEntity))
+	if entityType.picksUp then
+		newEntity.inventory = {}
+	end
 	newEntity.health = entityType.maxHealth
+	world.bumpWorld:add(newEntity, getXYWH(newEntity))
 	return newEntity
 end
 

@@ -10,9 +10,14 @@ return function(item, other)
 			return "slide"
 		end
 		return false
+	elseif other.border then -- border
+		return "slide"
 	else -- entity
-		if not other.nonSolid then
+		local otherEntityType = registry.entityTypes[other.type]
+		if not otherEntityType.nonSolid then
 			return "slide"
+		else
+			return "cross"
 		end
 	end
 end

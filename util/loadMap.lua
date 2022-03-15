@@ -71,9 +71,9 @@ local function loadMap(path)
 	
 	-- Add borders
 	local w, h = world.tileMapWidth * consts.tileSize, world.tileMapHeight * consts.tileSize
-	world.bumpWorld:add({border = "leftBorder", solid = true}, -1, -1, 1, h + 1 + consts.pitDeathDepth)
-	world.bumpWorld:add({border = "rightBorder", solid = true}, w, -1, 1, h + 1 + consts.pitDeathDepth)
-	world.bumpWorld:add({border = "topBorder", solid = true}, -1, -1, w + 2, 1)
+	world.bumpWorld:add({border = "leftBorder"}, -1, -1, 1, h + 1 + consts.pitDeathDepth)
+	world.bumpWorld:add({border = "rightBorder"}, w, -1, 1, h + 1 + consts.pitDeathDepth)
+	world.bumpWorld:add({border = "topBorder"}, -1, -1, w + 2, 1)
 	
 	return world, player, camera
 end

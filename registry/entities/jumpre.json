@@ -13,5 +13,7 @@
 	"dontChangeDirectionInAir": true,
 	"fallPoseSpeed": 100,
 	"skidSpeed": 25,
-	"skidWhenTryingToStop": false
+	"skidWhenTryingToStop": false,
+	"picksUp": true,
+	"dontChangeDirectionWhileSkidding": true
 }

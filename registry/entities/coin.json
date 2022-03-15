@@ -1,0 +1,9 @@
+{
+	"noGravity": true,
+	"width": 6,
+	"height": 8,
+	"nonSolid": true,
+	"pickUp": [
+		{"type": "coin", "count": 1}
+	]
+}

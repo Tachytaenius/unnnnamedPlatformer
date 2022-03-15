@@ -1,8 +1,10 @@
 [
-	{
-		"player": true,
-		"camera": true,
-		"type": "jumpre",
-		"position": [0, 178]
-	}
+	{"position": [293, 162], "type": "coin"},
+	{"position": [326, 153], "type": "coin"},
+	{"position": [366, 172], "type": "coin"},
+	{"position": [443, 154], "type": "coin"},
+	{"position": [478, 180], "type": "coin"},
+	{"position": [524, 158], "type": "coin"},
+	{"position": [401, 186], "type": "coin"},
+	{"position": [8, 178], "camera": true, "player": true, "type": "jumpre"}
 ]

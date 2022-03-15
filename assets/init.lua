@@ -61,9 +61,12 @@ function assets.load()
 	assets.font.font = love.graphics.newImageFont(assets.font.imageData, assets.font.info.glyphs)
 	
 	for entityTypeName, entityType in pairs(registry.entityTypes) do
-		local entityAsset = {}
+		local _, entityAsset = tryFile("assets/entities/" .. entityType.assetPath, entityType.assetPath:match("[^/]+$"), true)
+		if not entityAsset then
+			entityAsset = {}
+			traverse(entityAsset, "assets/entities/" .. entityType.assetPath .. "/")
+		end
 		assets.entities[entityTypeName] = entityAsset
-		traverse(entityAsset, "assets/entities/" .. entityType.assetPath .. "/")
 		if entityType.hasWalkCycle then
 			entityAsset.walkCycleFrames = math.floor(entityAsset.walking:getWidth() / entityAsset.standing:getWidth())
 		end

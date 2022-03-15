@@ -43,6 +43,11 @@ local function createEntityType(jsonData, path)
 	newEntityType.maxHealth = jsonData.maxHealth or 1
 	newEntityType.maxJumptime = jsonData.maxJumptime or 0
 	newEntityType.jumpGravityMultiplier = jsonData.jumpGravityMultiplier or 1 -- jump time has no effect with gravity multiplier 1
+	newEntityType.noGravity = jsonData.noGravity
+	newEntityType.pickUp = jsonData.pickUp -- table, what to give when picked up
+	newEntityType.picksUp = jsonData.picksUp -- bool, can this entity pick up things with pickUp
+	newEntityType.nonSolid = jsonData.nonSolid
+	newEntityType.dontChangeDirectionWhileSkidding = jsonData.dontChangeDirectionWhileSkidding
 	return newEntityType
 end
 
