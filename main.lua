@@ -104,7 +104,7 @@ function love.load(arg)
 	assets.load()
 	animatedTiles:reset()
 	level = level or arg[1]
-	world, player, camera = loadMap(level)
+	world, player, camera = loadMap(level or "level1")
 	paused = false
 	contentCanvas = love.graphics.newCanvas(consts.contentWidth, consts.contentHeight)
 	keyPressed, keyReleased = {}, {}
@@ -126,6 +126,7 @@ function love.update(dt)
 		end
 	end
 	for entity in world.entities:elements() do
+		local colsDone = {}
 		local entityType = registry.entityTypes[entity.type]
 		entity.previousPosition = vec2.clone(entity.position)
 		if not entity.dead then
@@ -206,17 +207,20 @@ function love.update(dt)
 						otherEntity.pickedUp = true
 						entitiesToRemove[#entitiesToRemove+1] = otherEntity
 					end
-					if col.normal.x ~= 0 then
-						otherEntity.health = math.max(0, otherEntity.health - entityType.sideAttackDamage)
-					elseif col.normal.y ~= 0 then
-						otherEntity.health = math.max(0, otherEntity.health - entityType.jumpDamage)
-						if jumpHeld and not jumped then
-							entity.velocity.y = math.max(-entityType.maximumBounceJumpSpeed, math.min(0, -entity.velocity.y * entityType.bounceJumpSpeedMultiplier))
-							entity.jumpTimeLeft = entityType.maxBounceJumpTime or entityType.maxJumpTime
-						else
-							entity.velocity.y = math.max(-entity.velocity.y, math.min(0, -entity.velocity.y * entityType.bounceSpeedMultiplier))
+					if entity.team ~= nil and otherEntity.team ~= nil and entity.team ~= otherEntity.team then
+						if col.normal.x ~= 0 then
+							otherEntity.health = math.max(0, otherEntity.health - entityType.sideAttackDamage)
+							entity.health = math.max(0, entity.health - otherEntityType.sideAttackDamage)
+						elseif col.normal.y == -1 then
+							otherEntity.health = math.max(0, otherEntity.health - entityType.jumpDamage)
+							if jumpHeld and not jumped then
+								entity.velocity.y = math.max(-entityType.maximumBounceJumpSpeed, math.min(0, -entity.velocity.y * entityType.bounceJumpSpeedMultiplier))
+								entity.jumpTimeLeft = entityType.maxBounceJumpTime or entityType.maxJumpTime
+							else
+								entity.velocity.y = math.max(-entity.velocity.y, math.min(0, -entity.velocity.y * entityType.bounceSpeedMultiplier))
+							end
+							dontStopYVel = true
 						end
-						dontStopYVel = true
 					end
 				end
 				if col.type ~= "cross" then
@@ -314,7 +318,8 @@ function love.draw(lerpI)
 	love.graphics.setCanvas(contentCanvas)
 	love.graphics.draw(world.sky)
 	lerpedCameraPos = lerp(camera.previousPosition, camera.position, lerpI)
-	local cameraPos = vec2.clone(lerpedCameraPos)
+	local _, _, w, h = getXYWH(camera)
+	local cameraPos = lerpedCameraPos + vec2(w/2,h/2)
 	cameraPos.x = math.max(contentCanvas:getWidth()/2, math.min(consts.tileSize*world.tileMapWidth-contentCanvas:getWidth()/2, cameraPos.x))
 	cameraPos.y = math.max(contentCanvas:getHeight()/2, math.min(consts.tileSize*world.tileMapHeight-contentCanvas:getHeight()/2, cameraPos.y))
 	love.graphics.translate(-cameraPos.x, -cameraPos.y)
@@ -371,6 +376,14 @@ function love.draw(lerpI)
 				drawPose("walking", quadreasonable.getQuad(math.floor(entity.walkCycleTimer * entityAsset.walkCycleFrames), 0, entityAsset.walkCycleFrames, 1, spriteWidth, spriteHeight, 0))
 			end
 		else
+			local x = lerpedPos.x - (spriteWidth - entityType.width) / 2
+			local y = lerpedPos.y - (spriteHeight - entityType.height) / 2
+			local r = 0
+			local sx = entity.direction or 1
+			local sy = 1
+			local ox = spriteWidth / 2
+			local oy = 0
+			x, y = x + ox, y + oy
 			love.graphics.draw(assets.entities[entity.type], x, y, r, sx, sy, ox, oy)
 			-- love.graphics.rectangle("line", getXYWH(entity))
 		end

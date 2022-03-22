@@ -1,6 +1,8 @@
 [
-	{"position": [8, 178], "player": true, "type": "jumpre"},
-	{"position": [100, 178], "camera": true, "direction": "left", "ai": true, "type": "crab"},
+	{"position": [250, 178], "player": true, "camera": true, "type": "jumpre", "team": 1},
+	{"position": [100, 198], "direction": "left", "ai": true, "type": "crab", "team": 2},
+	{"position": [200, 198], "direction": "right", "ai": true, "type": "crab", "team": 2},
+	{"position": [300, 198], "direction": "left", "ai": true, "type": "crab", "team": 2},
 	{"position": [293, 162], "type": "coin"},
 	{"position": [326, 153], "type": "coin"},
 	{"position": [366, 172], "type": "coin"},

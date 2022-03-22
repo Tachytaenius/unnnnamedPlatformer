@@ -18,6 +18,6 @@
 	"dontChangeDirectionWhileSkidding": true,
 	"jumpDamage" : 1,
 	"maximumBounceJumpSpeed": 200,
-	"bounceJumpSpeedMultiplier" : 1.5,
+	"bounceJumpSpeedMultiplier" : 1.25,
 	"maxBounceJumpTime" : 1
 }

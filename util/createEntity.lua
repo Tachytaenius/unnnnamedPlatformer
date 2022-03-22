@@ -13,6 +13,7 @@ local function createEntity(world, descriptor)
 	newEntity.velocity = vec2()
 	newEntity.ai = descriptor.ai
 	newEntity.world = world
+	newEntity.team = descriptor.team
 	newEntity.direction = descriptor.direction == "right" and 1 or descriptor.direction == "left" and -1 or descriptor.direction or 1
 	newEntity.onGround = false
 	newEntity.jumpTimeLeft = 0

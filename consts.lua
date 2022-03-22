@@ -2,6 +2,7 @@ local vec2 = require("lib.mathsies").vec2
 
 local consts = {}
 
+consts.title = "Unnnnamed Platformer"
 consts.identity = "platformer"
 consts.tickLength = 1/30
 consts.maxTicksPerFrame = 3
