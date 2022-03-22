@@ -13,5 +13,8 @@
 	},
 	"falling": {
 		"yOffset": -1
+	},
+	"dead": {
+		"yOffset": 8
 	}
 }

@@ -1,10 +1,11 @@
 [
+	{"position": [8, 178], "player": true, "type": "jumpre"},
+	{"position": [100, 178], "camera": true, "direction": "left", "ai": true, "type": "crab"},
 	{"position": [293, 162], "type": "coin"},
 	{"position": [326, 153], "type": "coin"},
 	{"position": [366, 172], "type": "coin"},
 	{"position": [443, 154], "type": "coin"},
 	{"position": [478, 180], "type": "coin"},
 	{"position": [524, 158], "type": "coin"},
-	{"position": [401, 186], "type": "coin"},
-	{"position": [8, 178], "camera": true, "player": true, "type": "jumpre"}
+	{"position": [401, 186], "type": "coin"}
 ]

@@ -41,13 +41,22 @@ local function createEntityType(jsonData, path)
 	newEntityType.skidWhenTryingToStop = jsonData.skidWhenTryingToStop
 	newEntityType.hasWalkCycle = not not jsonData.walkCycleTime
 	newEntityType.maxHealth = jsonData.maxHealth or 1
-	newEntityType.maxJumptime = jsonData.maxJumptime or 0
+	newEntityType.maxJumpTime = jsonData.maxJumpTime or 0
 	newEntityType.jumpGravityMultiplier = jsonData.jumpGravityMultiplier or 1 -- jump time has no effect with gravity multiplier 1
 	newEntityType.noGravity = jsonData.noGravity
 	newEntityType.pickUp = jsonData.pickUp -- table, what to give when picked up
 	newEntityType.picksUp = jsonData.picksUp -- bool, can this entity pick up things with pickUp
 	newEntityType.nonSolid = jsonData.nonSolid
 	newEntityType.dontChangeDirectionWhileSkidding = jsonData.dontChangeDirectionWhileSkidding
+	newEntityType.squashVulnerable = jsonData.squashVulnerable
+	newEntityType.deathPoseTimeout = jsonData.deathPoseTimeout
+	newEntityType.jumpOnBounceMultiplier = jsonData.jumpOnBounceMultiplier or 1
+	newEntityType.sideAttackDamage = jsonData.sideAttackDamage or 0
+	newEntityType.jumpDamage = jsonData.jumpDamage or 0
+	newEntityType.maximumBounceJumpSpeed = jsonData.maximumBounceJumpSpeed or newEntityType.jumpSpeed
+	newEntityType.bounceJumpSpeedMultiplier = jsonData.bounceJumpSpeedMultiplier or 1
+	newEntityType.maxBounceJumpTime = jsonData.maxBounceJumpTime
+	newEntityType.bounceSpeedMultiplier = jsonData.bounceSpeedMultiplier or 0.5
 	return newEntityType
 end
 

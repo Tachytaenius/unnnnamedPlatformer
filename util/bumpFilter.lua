@@ -14,7 +14,7 @@ return function(item, other)
 		return "slide"
 	else -- entity
 		local otherEntityType = registry.entityTypes[other.type]
-		if not otherEntityType.nonSolid then
+		if not otherEntityType.nonSolid and not other.dead then
 			return "slide"
 		else
 			return "cross"

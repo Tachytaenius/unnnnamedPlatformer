@@ -1,0 +1,5 @@
+{
+	"standing": {"dontFlip":true,"yOffset":-2},
+	"walking": {"dontFlip":true,"yOffset":-2},
+	"dead": {"dontFlip":true,"yOffset":-2}
+}

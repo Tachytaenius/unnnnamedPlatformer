@@ -4,6 +4,7 @@ local vec2 = require("lib.mathsies").vec2
 local bump = require("lib.bump")
 
 local consts = require("consts")
+local assets = require("assets")
 local registry = require("registry")
 
 local csvToBin = require("util.csvToBin")
@@ -20,6 +21,7 @@ local function loadMap(path)
 	world.gravity = infoJson.gravity and vec2(infoJson.gravity[1], infoJson.gravity[2]) or consts.defaultGravity
 	world.tileMapWidth = infoJson.tileMapWidth
 	world.tileMapHeight = infoJson.tileMapHeight
+	world.tint = world.tint or {1, 1, 1}
 	
 	-- entities.json
 	local entitiesJson = json.decode(love.filesystem.read(path .. "entities.json"))
@@ -74,6 +76,12 @@ local function loadMap(path)
 	world.bumpWorld:add({border = "leftBorder"}, -1, -1, 1, h + 1 + consts.pitDeathDepth)
 	world.bumpWorld:add({border = "rightBorder"}, w, -1, 1, h + 1 + consts.pitDeathDepth)
 	world.bumpWorld:add({border = "topBorder"}, -1, -1, w + 2, 1)
+	
+	if love.filesystem.getInfo(path .. "sky.png", "file") then
+		world.sky = love.graphics.newImage(path .. "sky.png")
+	else
+		world.sky = assets.sky
+	end
 	
 	return world, player, camera
 end

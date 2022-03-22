@@ -1,0 +1,13 @@
+{
+	"width": 10,
+	"height": 10,
+	"acceleration": 400,
+	"deceleration": 500,
+	"airAcceleration": 100,
+	"maxWalkSpeed": 75,
+	"maxFallSpeed": 600,
+	"walkCycleTime": 0.5,
+	"squashVulnerable": true,
+	"sideAttackDamage": 1,
+	"deathPoseTimeout": 0.2
+}

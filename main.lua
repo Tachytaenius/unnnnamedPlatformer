@@ -22,6 +22,7 @@ local addToInventory = require("util.addToInventory")
 local getInventoryAmount = require("util.getInventoryAmount")
 
 local world, player, camera, paused
+local level
 local contentCanvas
 local keyPressed, keyReleased
 
@@ -102,7 +103,8 @@ function love.load(arg)
 	love.graphics.setLineStyle("rough")
 	assets.load()
 	animatedTiles:reset()
-	world, player, camera = loadMap(arg[1])
+	level = level or arg[1]
+	world, player, camera = loadMap(level)
 	paused = false
 	contentCanvas = love.graphics.newCanvas(consts.contentWidth, consts.contentHeight)
 	keyPressed, keyReleased = {}, {}
@@ -130,11 +132,12 @@ function love.update(dt)
 			local prevPosX = entity.position.x
 			local move = 0
 			local dontResetWalkTimer
-			if entity == player and not entity.dead then
-				if love.keyboard.isDown("a") then
+			local jumped, jumpHeld
+			local function doMovement(left, right, jumpPressed, jumpDown)
+				if left then
 					move = move - 1
 				end
-				if love.keyboard.isDown("d") then
+				if right then
 					move = move + 1
 				end
 				if
@@ -166,10 +169,17 @@ function love.update(dt)
 				else
 					entity.velocity.x = entity.velocity.x + move * entityType.airAcceleration * dt
 				end
-				if entity.onGround and keyPressed.space then
-					entity.jumpTimeLeft = entityType.maxJumptime
+				if entity.onGround and jumpPressed then
+					entity.jumpTimeLeft = entityType.maxJumpTime
 					entity.velocity.y = entity.velocity.y - entityType.jumpSpeed
+					jumped = true
 				end
+				jumpHeld = jumpDown
+			end
+			if entity == player and not entity.dead then
+				doMovement(love.keyboard.isDown("a"), love.keyboard.isDown("d"), keyPressed.space, love.keyboard.isDown("space"))
+			elseif entity.ai and not entity.dead then
+				doMovement(entity.direction == -1, entity.direction == 1, false, false)
 			end
 			entity.onGround = false
 			local collidedX = false
@@ -177,6 +187,7 @@ function love.update(dt)
 			entity.position.x, entity.position.y, cols, len = world.bumpWorld:move(entity, newPosition.x, newPosition.y, bumpFilter)
 			local friction = 0
 			for _, col in ipairs(cols) do
+				local dontStopXVel, dontStopYVel
 				if type(col.other) == "number" then -- tile
 					local tileType = getTileTypeFromIndex(col.other, "mainTiles", world)
 					friction = math.max(friction, tileType.friction or consts.defaultFriction)
@@ -195,20 +206,36 @@ function love.update(dt)
 						otherEntity.pickedUp = true
 						entitiesToRemove[#entitiesToRemove+1] = otherEntity
 					end
+					if col.normal.x ~= 0 then
+						otherEntity.health = math.max(0, otherEntity.health - entityType.sideAttackDamage)
+					elseif col.normal.y ~= 0 then
+						otherEntity.health = math.max(0, otherEntity.health - entityType.jumpDamage)
+						if jumpHeld and not jumped then
+							entity.velocity.y = math.max(-entityType.maximumBounceJumpSpeed, math.min(0, -entity.velocity.y * entityType.bounceJumpSpeedMultiplier))
+							entity.jumpTimeLeft = entityType.maxBounceJumpTime or entityType.maxJumpTime
+						else
+							entity.velocity.y = math.max(-entity.velocity.y, math.min(0, -entity.velocity.y * entityType.bounceSpeedMultiplier))
+						end
+						dontStopYVel = true
+					end
 				end
 				if col.type ~= "cross" then
 					if col.normal.x ~= 0 then
-						entity.velocity.x = 0
-						collidedX = true
+						if not dontStopXVel then
+							entity.velocity.x = 0
+							collidedX = true
+						end
 					elseif col.normal.y ~= 0 then
-						entity.velocity.y = 0
-						if col.normal.y == -1 then
-							entity.onGround = true
+						if not dontStopYVel then
+							entity.velocity.y = 0
+							if col.normal.y == -1 then
+								entity.onGround = true
+							end
 						end
 					end
 				end
 			end
-			if love.keyboard.isDown("space") then
+			if jumpHeld then
 				entity.jumpTimeLeft = math.max(0, entity.jumpTimeLeft - dt)
 			else
 				entity.jumpTimeLeft = 0
@@ -243,11 +270,22 @@ function love.update(dt)
 				end
 			end
 			entity.skidding = not collidedX and math.sign(move) ~= math.sign(entity.velocity.x) and math.abs(entity.velocity.x) >= entityType.skidSpeed and (move ~= 0 or entityType.skidWhenTryingToStop)
+			if collidedX and entity.ai and not entity.dead then
+				entity.direction = -entity.direction
+			end
 			if entity.position.y > world.tileMapHeight * consts.tileSize + consts.pitDeathDepth then
 				entity.dead = true
+				entity.deathPoseTimer = entityType.deathPoseTimeout
 			end
 			if entity.health <= 0 then
 				entity.dead = true
+				entity.deathPoseTimer = entityType.deathPoseTimeout
+			end
+		end
+		if entity.deathPoseTimer then
+			entity.deathPoseTimer = entity.deathPoseTimer - dt
+			if entity.deathPoseTimer < 0 then
+				entitiesToRemove[#entitiesToRemove+1] = entity
 			end
 		end
 	end
@@ -262,13 +300,21 @@ function love.update(dt)
 	keyPressed, keyReleased = {}, {}
 end
 
+local function tint(r, g, b)
+	love.graphics.push("all")
+	love.graphics.setBlendMode("multiply", "premultiplied")
+	love.graphics.setColor(r, g, b)
+	love.graphics.rectangle("fill", 0, 0, contentCanvas:getDimensions())
+	love.graphics.pop()
+end
+
 function love.draw(lerpI)
 	if not camera then return end
 	love.graphics.setFont(assets.font.font)
 	love.graphics.setCanvas(contentCanvas)
-	love.graphics.draw(assets.sky)
-	lerpedPlayerPos = lerp(player.previousPosition, player.position, lerpI)
-	local cameraPos = vec2.clone(lerpedPlayerPos)
+	love.graphics.draw(world.sky)
+	lerpedCameraPos = lerp(camera.previousPosition, camera.position, lerpI)
+	local cameraPos = vec2.clone(lerpedCameraPos)
 	cameraPos.x = math.max(contentCanvas:getWidth()/2, math.min(consts.tileSize*world.tileMapWidth-contentCanvas:getWidth()/2, cameraPos.x))
 	cameraPos.y = math.max(contentCanvas:getHeight()/2, math.min(consts.tileSize*world.tileMapHeight-contentCanvas:getHeight()/2, cameraPos.y))
 	love.graphics.translate(-cameraPos.x, -cameraPos.y)
@@ -290,22 +336,29 @@ function love.draw(lerpI)
 		local entityAsset = assets.entities[entity.type]
 		local spriteWidth, spriteHeight = (entityAsset.standing or entityAsset):getDimensions()
 		local lerpedPos = lerp(entity.previousPosition, entity.position, lerpI)
-		local x = lerpedPos.x - (spriteWidth - entityType.width) / 2
-		local y = lerpedPos.y - (spriteHeight - entityType.height) / 2
-		local r = 0
-		local sx = entity.direction or 1
-		local sy = 1
-		local ox = spriteWidth / 2
-		local oy = 0
-		x, y = x + ox, y + oy
-		local function drawPose(poseName)
+		local function drawPose(poseName, quad)
+			local x = lerpedPos.x - (spriteWidth - entityType.width) / 2
+			local y = lerpedPos.y - (spriteHeight - entityType.height) / 2
+			local r = 0
+			local sx = entity.direction or 1
+			local sy = 1
+			local ox = spriteWidth / 2
+			local oy = 0
+			x, y = x + ox, y + oy
 			if entityAsset.info and entityAsset.info[poseName] then
 				x = x + (entityAsset.info[poseName].xOffset or 0)
 				y = y + (entityAsset.info[poseName].yOffset or 0)
+				sx = entityAsset.info[poseName].dontFlip and 1 or sx
 			end
-			love.graphics.draw(entityAsset[poseName], x, y, r, sx, sy, ox, oy)
+			if quad then
+				love.graphics.draw(entityAsset[poseName], quad, x, y, r, sx, sy, ox, oy)
+			else
+				love.graphics.draw(entityAsset[poseName], x, y, r, sx, sy, ox, oy)
+			end
 		end
-		if not entity.onGround and entity.velocity.y <= entityType.fallPoseSpeed and entityAsset.jumping then
+		if entityAsset.dead and entity.dead then
+			drawPose("dead")
+		elseif not entity.onGround and entity.velocity.y <= entityType.fallPoseSpeed and entityAsset.jumping then
 			drawPose("jumping")
 		elseif not entity.onGround and entity.velocity.y > entityType.fallPoseSpeed and entityAsset.falling then
 			drawPose("falling")
@@ -315,11 +368,7 @@ function love.draw(lerpI)
 			if entity.velocity.x == 0 then
 				drawPose("standing")
 			else
-				if entityAsset.info and entityAsset.info.walking then
-					x = x + (entityAsset.info.walking.xOffset or 0)
-					y = y + (entityAsset.info.walking.yOffset or 0)
-				end
-				love.graphics.draw(entityAsset.walking, quadreasonable.getQuad(math.floor(entity.walkCycleTimer * entityAsset.walkCycleFrames), 0, entityAsset.walkCycleFrames, 1, spriteWidth, spriteHeight, 0), x, y, r, sx, sy, ox, oy)
+				drawPose("walking", quadreasonable.getQuad(math.floor(entity.walkCycleTimer * entityAsset.walkCycleFrames), 0, entityAsset.walkCycleFrames, 1, spriteWidth, spriteHeight, 0))
 			end
 		else
 			love.graphics.draw(assets.entities[entity.type], x, y, r, sx, sy, ox, oy)
@@ -332,10 +381,9 @@ function love.draw(lerpI)
 		end
 	end
 	love.graphics.origin()
+	tint(world.tint)
 	if player and player.dead then
-		love.graphics.setColor(0, 0, 0, 0.5)
-		love.graphics.rectangle("fill", 0, 0, contentCanvas:getDimensions())
-		love.graphics.setColor(1, 1, 1)
+		tint(0.5, 0.5, 0.5)
 		local gameOverText = parseFontSpecials("Game over!")
 		local w, h = assets.font.font:getWidth(gameOverText), assets.font.font:getHeight()
 		love.graphics.print(gameOverText, contentCanvas:getWidth()/2-w/2, contentCanvas:getHeight()/2-h)

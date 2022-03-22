@@ -2,7 +2,7 @@
 	"width": 10,
 	"height": 30,
 	"jumpSpeed": 110,
-	"maxJumptime": 1,
+	"maxJumpTime": 1,
 	"jumpGravityMultiplier": 0.45,
 	"acceleration": 400,
 	"deceleration": 500,
@@ -15,5 +15,9 @@
 	"skidSpeed": 25,
 	"skidWhenTryingToStop": false,
 	"picksUp": true,
-	"dontChangeDirectionWhileSkidding": true
+	"dontChangeDirectionWhileSkidding": true,
+	"jumpDamage" : 1,
+	"maximumBounceJumpSpeed": 200,
+	"bounceJumpSpeedMultiplier" : 1.5,
+	"maxBounceJumpTime" : 1
 }
