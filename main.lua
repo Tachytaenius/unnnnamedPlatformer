@@ -404,7 +404,14 @@ function love.draw(lerpI)
 		local w2 = assets.font.font:getWidth(continueText)
 		love.graphics.print(continueText, contentCanvas:getWidth()/2-w2/2, contentCanvas:getHeight()/2)
 	end
-	-- love.graphics.draw()
+	love.graphics.push()
+	love.graphics.translate(consts.coinCounterX, consts.coinCounterY)
+	love.graphics.draw(assets.entities.coin, 0, 0)
+	local coinTextPosX, coinTextPosY = assets.entities.coin:getWidth(), assets.entities.coin:getHeight()/2-assets.font.font:getHeight()/2
+	local coinCount = getInventoryAmount(camera, "coin")
+	local coinCounterText = string.format(": %03d", coinCount)
+	love.graphics.print(coinCounterText, coinTextPosX, coinTextPosY)
+	love.graphics.pop()
 	love.graphics.reset()
 	love.graphics.draw(contentCanvas, 0, 0, 0, consts.contentScale)
 end

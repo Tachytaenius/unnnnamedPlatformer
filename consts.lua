@@ -10,6 +10,9 @@ consts.contentWidth = 384
 consts.contentHeight = 256
 consts.contentScale = 3
 
+consts.coinCounterX = 4
+consts.coinCounterY = 4
+
 consts.tileSize = 16
 consts.pitDeathDepth = 32
 consts.defaultFriction = 0
