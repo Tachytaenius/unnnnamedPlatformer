@@ -1,0 +1,9 @@
+air
+stone
+dirt
+grass
+tallGrass
+waterSurface
+water
+stoneBricks
+log
