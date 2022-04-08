@@ -4,7 +4,7 @@
 	"acceleration": 400,
 	"deceleration": 500,
 	"airAcceleration": 100,
-	"maxWalkSpeed": 50,
+	"maxWalkSpeed": 25,
 	"maxFallSpeed": 600,
 	"walkCycleTime": 0.5,
 	"squashVulnerable": true,

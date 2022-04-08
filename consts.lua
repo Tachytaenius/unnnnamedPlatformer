@@ -16,6 +16,6 @@ consts.coinCounterY = 4
 consts.tileSize = 16
 consts.pitDeathDepth = 32
 consts.defaultFriction = 0
-consts.defaultGravity = vec2(0, 300)
+consts.defaultGravity = vec2(0, 400)
 
 return consts

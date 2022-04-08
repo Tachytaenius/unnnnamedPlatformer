@@ -209,8 +209,12 @@ function love.update(dt)
 					end
 					if entity.team ~= nil and otherEntity.team ~= nil and entity.team ~= otherEntity.team then
 						if col.normal.x ~= 0 then
-							otherEntity.health = math.max(0, otherEntity.health - entityType.sideAttackDamage)
-							entity.health = math.max(0, entity.health - otherEntityType.sideAttackDamage)
+							if not entity.dead then
+								otherEntity.health = math.max(0, otherEntity.health - entityType.sideAttackDamage)
+							end
+							if not otherEntity.dead then
+								entity.health = math.max(0, entity.health - otherEntityType.sideAttackDamage)
+							end
 						elseif col.normal.y == -1 then
 							otherEntity.health = math.max(0, otherEntity.health - entityType.jumpDamage)
 							if jumpHeld and not jumped then
