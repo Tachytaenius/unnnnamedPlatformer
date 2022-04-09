@@ -1,9 +1,9 @@
 {
 	"width": 10,
 	"height": 30,
-	"jumpSpeed": 140,
+	"jumpSpeed": 145,
 	"maxJumpTime": 1,
-	"jumpGravityMultiplier": 0.40,
+	"jumpGravityMultiplier": 0.45,
 	"acceleration": 500,
 	"deceleration": 700,
 	"airAcceleration": 200,
@@ -12,12 +12,12 @@
 	"walkCycleTime": 0.75,
 	"dontChangeDirectionInAir": true,
 	"fallPoseSpeed": 20,
-	"skidSpeed": 0,
+	"skidSpeed": 10,
 	"skidWhenTryingToStop": false,
 	"picksUp": true,
 	"dontChangeDirectionWhileSkidding": false,
 	"jumpDamage" : 1,
-	"maximumBounceJumpSpeed": 140,
+	"maximumBounceJumpSpeed": 147,
 	"bounceJumpSpeedMultiplier" : 1.25,
 	"maxBounceJumpTime" : 1
 }
